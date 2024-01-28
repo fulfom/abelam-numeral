@@ -158,7 +158,8 @@ const config: Config = {
   testMatch: [
     // "**/__tests__/**/*.[jt]s?(x)",
     // "**/?(*.)+(spec|test).[tj]s?(x)",
-    "**/vcLexer.test.ts"
+    // "**/vcLexer.test.ts",
+    "**/parseAbelam.test.ts",
   ],
 
   // An array of regexp pattern strings that are matched against all test paths, matched tests are skipped
