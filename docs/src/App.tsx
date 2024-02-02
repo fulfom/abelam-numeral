@@ -74,7 +74,7 @@ function ArabicToAbelamForm() {
       </Form>
       <p>{abelam}</p>
       <ParseDisplay abelam={parseAbelam(abelam)
-        .filter((x) => x.vvalue === arabic).at(0)} />
+        .find((x) => x.vvalue === arabic)} />
     </>
   )
 }
