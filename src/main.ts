@@ -17,7 +17,7 @@ const ATOMS = [
 
 const atomRange = ATOMS.length;
 
-// この言語には不要なので，type = "a" の場合の実装はナシ
+// 少しアドホックな実装
 const CHUNKS: TYPE_CHUNK[] = [
     {
         type: "m",
@@ -37,7 +37,7 @@ const CHUNKS: TYPE_CHUNK[] = [
 
 // Arabic numerals to Abelam numerals
 export const arabicToAbelam = (total: number, isOneDeletion: boolean = false): string => {
-    if (total === 0) {
+    if (total <= 0 || Number.isInteger(total) === false) {
         return ""
     }
     if (total === 1 && isOneDeletion) {
@@ -51,6 +51,10 @@ export const arabicToAbelam = (total: number, isOneDeletion: boolean = false): s
     const chunk: TYPE_CHUNK = CHUNKS.sort((a, b) => b.value - a.value).find((c) => total >= c.value)!;
 
     const variable = Math.floor(total / chunk.value);
+
+    if (!(chunk.range[0] <= variable && variable < chunk.range[1])) {
+        return "";
+    }
 
     // exceptional 25
     if (chunk.value === 5 && variable === 5) {
@@ -71,7 +75,7 @@ export type Digit = {
     vvalue: number,
 }
 
-const getAtomNumber = (input: string): number | null => {
+export const getAtomNumber = (input: string): number | null => {
     const index = ATOMS.findIndex((atom) => atom === input);
     if (index === -1) {
         return null;
@@ -79,7 +83,7 @@ const getAtomNumber = (input: string): number | null => {
     return index + 1;
 }
 
-const getChunk = (input: string): TYPE_CHUNK | null => {
+export const getChunk = (input: string): TYPE_CHUNK | null => {
     const index = CHUNKS.findIndex((chunk) => chunk.form === input);
     if (index === -1) {
         return null;
@@ -120,12 +124,18 @@ export const vcLexer = (input: string): VCLex[][] => {
     return candidates;
 }
 
+export const getTotalValue = (digit: Digit[]) => digit.reduce((acc, cur) => {
+    return acc + cur.vvalue * (getChunk(cur.chunk)?.value || 1);
+}, 0);
+
 // parse an Abelam numeral string
-export const parseAbelam = (input: string): Digit[][] => {
+export const parseAbelam = (input: string): Digit[] => {
+    if (input === "") {
+        return [];
+    }
     return vcLexer(input).map((candidate) => {
         let result: Digit[] = [];
         let minChunkValue = Infinity;
-        let currentValue = 0;
         for (const vcl of candidate) {
             const atom = getAtomNumber(vcl.variable);
             const chunk = getChunk(vcl.chunk);
@@ -142,19 +152,30 @@ export const parseAbelam = (input: string): Digit[][] => {
                         vvalue: atom,
                     });
                 }
+                let flag = false;
                 for (let i = 0; i < result.length; i++) {
                     const currentVariableCandidate = result.slice(i, result.length);
-                    const currentVariableCandidateValue = currentVariableCandidate.reduce((acc, cur) => {
-                        return acc + cur.vvalue * (getChunk(cur.chunk)?.value || 1);
-                    }, 0);
+                    const currentVariableCandidateValue = getTotalValue(currentVariableCandidate);
 
                     // 25 exception
                     if (chunk.value === 5 && !atom && currentVariableCandidateValue === 20) {
-                        currentValue += chunk.value;
                         result.push({ ...vcl, vvalue: 1 });
+                        flag = true;
                         break;
                     }
+                    if (chunk.value === 5 && currentVariableCandidateValue === 5) {
+                        continue;
+                    }
                     if (currentVariableCandidateValue < chunk.range[1]) {
+                        // 同じチャンクは同階層に共起しない
+                        if (i >= 1) {
+                            const prevChunk = getChunk(result[i - 1].chunk);
+                            if (prevChunk && prevChunk.value <= chunk.value) {
+                                continue;
+                            }
+                        }
+
+                        flag = true;
                         result = [...result.slice(0, i), {
                             variable: currentVariableCandidate,
                             chunk: vcl.chunk,
@@ -163,48 +184,21 @@ export const parseAbelam = (input: string): Digit[][] => {
                         break;
                     }
                 }
+                if (!flag) {
+                    return undefined;
+                }
             } else {
-                currentValue += (atom || 1) * chunk.value;
+                if (atom === 1 && chunk.isOneDeletion) {
+                    return undefined;
+                }
                 result.push({ ...vcl, vvalue: (atom || 1) });
             }
             minChunkValue = chunk.value;
         }
-        return result;
-    });
-
-    // 人間の逐次的な読み方を再現する．
-    // 左端から入れ子のない範囲を探す．終端は chunk.value <= nextChunk.value となる nextChunk が出てくるか，文字列の終端
-
-    // v c*5 v c*100 v c*5 v c*5 v
-    // (v c*5 v c*100 v c*5 v c*5 v
-    // (v c*5 v) c*100 v c*5 v c*5 v (C*100 は (v c*5 v) を range に含むので)
-
-    // チャンク
-    // 1. 
-    // (v c*5 v) c*100 (v c*5 v c*5 v
-    // (v c*5 v) c*100 (v c*5 v) c*5 v (C*5 は (v c*5 v) を range に含むので)
-
-    // 2.
-    // ((v c*5 v) c*100 v c*5 v c*5 v
-    // ((v c*5 v) c*100 v) c*5 v c*5 v → C*5.range に収まらないので不正
-
-    // 現在の想定チャンクより大きいチャンクが出てきた場合，
-    // e.g. ((v c*5), v) c*100|
-    // e.g. ((((v c*5), v) c*5)| v) c*100|
-    // e.g. (v c*5) c*5|
-
-    // 25 exception
-    // e.g. (4 c*5) c*5| or (4 c*5) (c*5)|
-
-    // digitsCandidates.push([{
-    //     variable: `${v} ${c} ${candidate[0].variable}`,
-    //     chunk: candidate[0].chunk,
-    // }, ...candidate.slice(1)])
-
+        return {
+            variable: result,
+            chunk: "",
+            vvalue: getTotalValue(result),
+        } as Digit;
+    }).filter((v): v is Digit => (!!v));
 }
-
-// Abelam to Arabic numerals
-
-// export const abelamToArabic = (input: string): number[] => {
-
-// }

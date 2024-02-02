@@ -1,103 +1,120 @@
 import { parseAbelam, Digit } from "../src/main";
 
 test('test', () => {
+    expect(parseAbelam("")).toEqual([] satisfies Digit[]);
     expect(parseAbelam("vyndyk tammba kymbyk tammba vyndyk")).toEqual([ //67
-        [
-            {
-                variable: [
-                    {
-                        variable: "vyndyk",
-                        chunk: "tammba",
-                        vvalue: 2,
-                    },
-                    {
-                        variable: "kymbyk",
-                        chunk: "",
-                        vvalue: 3,
-                    }
-                ],
-                chunk: "tammba",
-                vvalue: 13,
-            },
-            {
-                variable: "vyndyk",
-                chunk: "",
-                vvalue: 2,
-            }
-        ]
-    ] satisfies Digit[][]);
+        {
+            variable: [
+                {
+                    variable: [
+                        {
+                            variable: "vyndyk",
+                            chunk: "tammba",
+                            vvalue: 2,
+                        },
+                        {
+                            variable: "kymbyk",
+                            chunk: "",
+                            vvalue: 3,
+                        }
+                    ],
+                    chunk: "tammba",
+                    vvalue: 13,
+                },
+                {
+                    variable: "vyndyk",
+                    chunk: "",
+                    vvalue: 2,
+                }
+            ],
+            chunk: "",
+            vvalue: 67
+        }
+    ] satisfies Digit[]);
     expect(parseAbelam("vyndyk vyndyk tammba tammba vyndyk vyndyk")).toEqual([ //29, 104
-        [
-            {
-                variable: "vyndyk vyndyk",
-                chunk: "tammba",
-                vvalue: 4,
-            },
-            {
-                variable: "",
-                chunk: "tammba",
-                vvalue: 1,
-            },
-            {
-                variable: "vyndyk vyndyk",
-                chunk: "",
-                vvalue: 4,
-            }
-        ],
-        [
-            {
-                variable: "",
-                chunk: "vyndyk vyndyk tammba tammba",
-                vvalue: 1,
-            },
-            {
-                variable: "vyndyk vyndyk",
-                chunk: "",
-                vvalue: 4,
-            }
-        ]
-    ] satisfies Digit[][]);
+        {
+            variable: [
+                {
+                    variable: "vyndyk vyndyk",
+                    chunk: "tammba",
+                    vvalue: 4,
+                },
+                {
+                    variable: "",
+                    chunk: "tammba",
+                    vvalue: 1,
+                },
+                {
+                    variable: "vyndyk vyndyk",
+                    chunk: "",
+                    vvalue: 4,
+                }
+            ],
+            chunk: "",
+            vvalue: 29
+        },
+        {
+            variable: [
+                {
+                    variable: "",
+                    chunk: "vyndyk vyndyk tammba tammba",
+                    vvalue: 1,
+                },
+                {
+                    variable: "vyndyk vyndyk",
+                    chunk: "",
+                    vvalue: 4,
+                }
+            ],
+            chunk: "",
+            vvalue: 104
+        }
+    ] satisfies Digit[]);
     expect(parseAbelam("tammba vyndyk vyndyk vyndyk vyndyk tammba tammba vyndyk tammba vyndyk vyndyk tammba vyndyk vyndyk")).toEqual([
-        [
-            {
-                variable: [
-                    {
-                        variable: "",
-                        chunk: "tammba",
-                        vvalue: 1,
-                    },
-                    {
-                        variable: "vyndyk vyndyk",
-                        chunk: "",
-                        vvalue: 4,
-                    },
-                ],
-                chunk: "vyndyk vyndyk tammba tammba",
-                vvalue: 9,
-            },
-            {
-                variable: [
-                    {
-                        variable: "vyndyk",
-                        chunk: "tammba",
-                        vvalue: 2,
-                    },
-                    {
-                        variable: "vyndyk vyndyk",
-                        chunk: "",
-                        vvalue: 4,
-                    },
-                ],
-                chunk: "tammba",
-                vvalue: 14,
-            },
-            {
-                variable: "vyndyk vyndyk",
-                chunk: "",
-                vvalue: 4,
-            }
-        ]
-    ] satisfies Digit[][]);
+        {
+            variable: [
+                {
+                    variable: [
+                        {
+                            variable: "",
+                            chunk: "tammba",
+                            vvalue: 1,
+                        },
+                        {
+                            variable: "vyndyk vyndyk",
+                            chunk: "",
+                            vvalue: 4,
+                        },
+                    ],
+                    chunk: "vyndyk vyndyk tammba tammba",
+                    vvalue: 9,
+                },
+                {
+                    variable: [
+                        {
+                            variable: "vyndyk",
+                            chunk: "tammba",
+                            vvalue: 2,
+                        },
+                        {
+                            variable: "vyndyk vyndyk",
+                            chunk: "",
+                            vvalue: 4,
+                        },
+                    ],
+                    chunk: "tammba",
+                    vvalue: 14,
+                },
+                {
+                    variable: "vyndyk vyndyk",
+                    chunk: "",
+                    vvalue: 4,
+                }
+            ],
+            chunk: "",
+            vvalue: 974
+        }
+    ] satisfies Digit[]);
 
     //     expect(abelamToArabic("vyndyk vyndyk vyndyk tammba tammba vyndyk vyndyk tammba vyndyk vyndyk")).toBe([224]);
     //     expect(abelamToArabic("tammba kymbyk vyndyk vyndyk tammba tammba vyndyk tammba tammba vyndyk")).toBe([852]);
